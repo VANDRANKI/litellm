@@ -221,15 +221,13 @@ class SemanticMCPToolFilter:
         Return True if a client-side tool name refers to the given canonical
         MCP tool name.
 
-        MCP clients (e.g. opencode) commonly wrap the proxy's canonical tool
-        name with an additive namespace prefix of their own
-        (``<client_alias><sep><canonical>``). The prefix can use either a
-        dash or an underscore as separator regardless of what
-        ``MCP_TOOL_PREFIX_SEPARATOR`` is set to on the proxy, because the
-        client doesn't know the proxy's separator.
+        MCP clients commonly wrap the proxy's canonical tool name in two ways:
+        1. Prefix-addition (e.g. opencode): ``<client_alias><sep><canonical>``
+        2. Suffix-addition (e.g. LibreChat): ``<canonical><sep><uid>``
+        Both dash and underscore are accepted as separators.
 
-        The match is anchored: ``canonical`` must form the complete suffix
-        of ``client_name`` and be preceded by a separator character, so
+        The match is anchored: ``canonical`` must form a complete prefix or
+        suffix of ``client_name`` bounded by a separator character, so
         ``rain_gear`` does not match canonical ``ear``.
 
         Suffix matching is additionally gated on ``canonical`` itself
@@ -247,10 +245,15 @@ class SemanticMCPToolFilter:
             return False
         if len(client_name) <= len(canonical):
             return False
-        if not client_name.endswith(canonical):
-            return False
-        separator = client_name[-len(canonical) - 1]
-        return separator in ("_", "-")
+        if client_name.endswith(canonical):
+            # Prefix-addition: <client_alias><sep><canonical>
+            separator = client_name[-len(canonical) - 1]
+            return separator in ("_", "-")
+        # Suffix-addition: <canonical><sep><uid>  (e.g. LibreChat appends unique IDs)
+        if client_name.startswith(canonical):
+            separator = client_name[len(canonical)]
+            return separator in ("_", "-")
+        return False
 
     def _get_tools_by_names(
         self, tool_names: List[str], available_tools: List[Any]
