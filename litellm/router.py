@@ -8446,6 +8446,11 @@ class Router:
             )
         elif litellm_model_name_model_info is not None:
             model_info = litellm_model_name_model_info
+        elif custom_model_info is not None:
+            # Model has custom pricing from config but is not in the built-in
+            # model_prices_and_context_window.json. Return custom pricing directly
+            # so the Model Hub table shows the configured prices instead of "Free".
+            model_info = cast(ModelInfo, custom_model_info)
 
         return model_info
 
