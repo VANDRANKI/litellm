@@ -873,6 +873,45 @@ def test_prepare_metadata_fields(
     updated_non_default_values = prepare_metadata_fields(**args)
     assert updated_non_default_values == expected_result
 
+def test_prepare_metadata_fields_falsy_premium_no_exception():
+    """Falsy premium fields (e.g. disable_global_guardrails=False from the UI toggle
+    default) must not trigger the enterprise license check.
+    Regression test for https://github.com/BerriAI/litellm/issues/30285
+    """
+    from litellm.proxy.management_endpoints.key_management_endpoints import (
+        prepare_metadata_fields,
+    )
+
+    with patch("litellm.proxy.proxy_server.premium_user", False):
+        result = prepare_metadata_fields(
+            data=UpdateKeyRequest(
+                key="sk-1qGQUJJTcljeaPfzgWRrXQ",
+                disable_global_guardrails=False,
+            ),
+            non_default_values={},
+            existing_metadata={"disable_global_guardrails": True},
+        )
+    assert result["metadata"]["disable_global_guardrails"] is False
+
+
+def test_prepare_metadata_fields_true_premium_raises():
+    """disable_global_guardrails=True must require an Enterprise license."""
+    from litellm.proxy.management_endpoints.key_management_endpoints import (
+        prepare_metadata_fields,
+    )
+    from fastapi import HTTPException
+
+    with pytest.raises(HTTPException):
+        with patch("litellm.proxy.proxy_server.premium_user", False):
+            prepare_metadata_fields(
+                data=UpdateKeyRequest(
+                    key="sk-1qGQUJJTcljeaPfzgWRrXQ",
+                    disable_global_guardrails=True,
+                ),
+                non_default_values={},
+                existing_metadata={},
+            )
+
 
 @pytest.mark.asyncio
 @pytest.mark.skip(reason="Requires reliable external DB connection (prisma).")
