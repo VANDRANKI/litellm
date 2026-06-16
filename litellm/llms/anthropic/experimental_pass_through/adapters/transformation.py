@@ -805,7 +805,7 @@ class LiteLLMAnthropicMessagesAdapter:
         """
         new_tools: List[ChatCompletionToolParam] = []
         tool_name_mapping: Dict[str, str] = {}
-        mapped_tool_params = ["name", "input_schema", "description", "cache_control"]
+        mapped_tool_params = ["name", "input_schema", "description", "cache_control", "type"]
 
         for idx, tool in enumerate(tools):
             # Check if this is an Anthropic-native tool that should be kept as-is
