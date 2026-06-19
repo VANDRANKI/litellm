@@ -1,343 +1,113 @@
 # Contributing to LiteLLM
 
-Thank you for your interest in contributing to LiteLLM! We welcome contributions of all kinds - from bug fixes and documentation improvements to new features and integrations.
-
-## **Checklist before submitting a PR**
-
-Here are the core requirements for any PR submitted to LiteLLM:
-
-- [ ] **Sign the Contributor License Agreement (CLA)** - [see details](#contributor-license-agreement-cla)
-- [ ] **Keep scope isolated** - Your changes should address 1 specific problem at a time
-
-#### Proxy (Backend) PRs
-
-- [ ] **Add testing** - Adding at least 1 test is a hard requirement - [see details](#adding-testing)
-- [ ] **Ensure your PR passes all checks**:
-  - [ ] [Unit Tests](#running-unit-tests) - `make test-unit`
-  - [ ] [Linting / Formatting](#running-linting-and-formatting-checks) - `make lint`
-
-#### UI PRs
-
-- [ ] **Ensure the UI builds successfully** - `npm run build`
-- [ ] **Ensure all UI unit tests pass** - `npm run test`
-- [ ] **Add tests for new components or logic** - If you are adding a new component or new logic, add corresponding tests
-
-## **Contributor License Agreement (CLA)**
-
-Before contributing code to LiteLLM, you must sign our [Contributor License Agreement (CLA)](https://cla-assistant.io/BerriAI/litellm). This is a legal requirement for all contributions to be merged into the main repository.
-
-**Important:** We strongly recommend reviewing and signing the CLA before starting work on your contribution to avoid any delays in the PR process.
+Thank you for contributing! This guide covers the essential workflow for getting started.
 
 ## Quick Start
 
-### 1. Setup Your Local Development Environment
+### 1. Fork & Clone
 
 ```bash
-# Fork the repository on GitHub (click the Fork button at https://github.com/BerriAI/litellm)
-# Then clone your fork locally
-git clone https://github.com/YOUR_USERNAME/litellm.git
+git clone https://github.com/<your-username>/litellm.git
 cd litellm
+```
 
-# Create a new branch for your feature
-git checkout -b your-feature-branch
+### 2. Set Up Environment with `uv`
 
-# Install development dependencies
+We use [`uv`](https://github.com/astral-sh/uv) for fast, reproducible Python environments.
+
+```bash
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install core dev dependencies
 make install-dev
 
-# Verify your setup works
-make help
-```
+# Install proxy dev dependencies (full feature set)
+make install-proxy-dev
 
-That's it! Your local development environment is ready.
-
-### 2. Development Workflow
-
-Here's the recommended workflow for making changes:
-
-```bash
-# Make your changes to the code
-# ...
-
-# Format your code (auto-fixes formatting issues)
-make format
-
-# Run all linting checks (matches CI exactly)
-make lint
-
-# Run unit tests to ensure nothing is broken
-make test-unit
-
-# Commit your changes
-git add .
-git commit -m "Your descriptive commit message"
-
-# Push and create a PR
-git push origin your-feature-branch
-```
-
-## Adding Testing
-
-**Adding at least 1 test is a hard requirement for all PRs.**
-
-### Where to Add Tests
-
-Add your tests to the [`tests/test_litellm/` directory](https://github.com/BerriAI/litellm/tree/main/tests/test_litellm).
-
-- This directory mirrors the structure of the `litellm/` directory
-- **Only add mocked tests** - no real LLM API calls in this directory
-- For integration tests with real APIs, use the appropriate test directories
-
-### File Naming Convention
-
-The `tests/test_litellm/` directory follows the same structure as `litellm/`:
-
-- `litellm/proxy/caching_routes.py` → `tests/test_litellm/proxy/test_caching_routes.py`
-- `litellm/utils.py` → `tests/test_litellm/test_utils.py`
-
-### Example Test
-
-```python
-import pytest
-from litellm import completion
-
-def test_your_feature():
-    """Test your feature with a descriptive docstring."""
-    # Arrange
-    messages = [{"role": "user", "content": "Hello"}]
-    
-    # Act
-    # Use mocked responses, not real API calls
-    
-    # Assert
-    assert expected_result == actual_result
-```
-
-## Running Tests and Checks
-
-### Running Unit Tests
-
-Run all unit tests (uses parallel execution for speed):
-
-```bash
-make test-unit
-```
-
-If you're running broader test suites, proxy tests, or anything that touches PostgreSQL-backed fixtures/plugins, install the full local test environment first:
-
-```bash
+# Install test dependencies and generate Prisma client
 make install-test-deps
 ```
 
-This syncs the locked test environment used across the repo, including `psycopg` v3 plus `psycopg-binary` (used by `pytest-postgresql`), `psycopg2-binary` (used by some proxy E2E tests), and a generated Prisma client for DB-backed proxy tests, so pytest startup matches CI without manual package installs.
+### 3. Make Your Changes
 
-Run specific test files:
+Create a feature branch:
+
 ```bash
-uv run pytest tests/test_litellm/test_your_file.py -v
+git checkout -b feat/your-feature-name
 ```
 
-### Running Linting and Formatting Checks
+### 4. Code Style Requirements
 
-Run all linting checks (matches CI exactly):
+Before committing, ensure your code follows these rules:
 
+**Formatting (required — enforced in CI):**
 ```bash
-make lint
+uv run black .
 ```
 
-Individual linting commands:
+**Linting:**
 ```bash
-make format-check       # Check Black formatting
-make lint-ruff          # Run Ruff linting
-make lint-mypy          # Run MyPy type checking
-make check-circular-imports    # Check for circular imports
-make check-import-safety       # Check import safety
+make lint-ruff     # Ruff linter
+make lint-mypy     # MyPy type checking
+make lint          # All linters (Ruff + MyPy + Black + circular imports)
 ```
 
-Apply formatting (auto-fixes issues):
-```bash
-make format
-```
+**Key style rules:**
 
-> **Black formatting is enforced in CI.** All PRs must pass the Black formatting check.
->
-> - **AI coding agents** (Claude Code, Copilot, Cursor, etc.): `AGENTS.md` and `CLAUDE.md` instruct agents to run `poetry run black .` before committing.
-> - **VS Code users**: Install the [Black Formatter extension](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter) and enable format-on-save:
->   ```json
->   {
->     "[python]": {
->       "editor.defaultFormatter": "ms-python.black-formatter",
->       "editor.formatOnSave": true
->     }
->   }
->   ```
+- **No inline imports** — all imports belong at the top of the file (module level). Inline imports inside functions make dependencies hard to trace. The only exception is avoiding circular imports where truly necessary.
+- **Use dict spread for immutable copies** — prefer `{**original, "key": new_value}` over `dict(obj)` followed by mutation. The spread produces the final dict in one step.
+- **Guard at resolution time** — when resolving an optional value via a fallback chain (e.g. `a or b or ""`), raise immediately if the empty result is an error condition. Don't pass empty strings downstream.
+- **Type hints required** — all public API functions must have complete type hints including return types.
+- **FastAPI parameter declarations** — mark required query/form params with `= Query(...)` / `= Form(...)` explicitly.
 
-### CI Compatibility
-
-To ensure your changes will pass CI, run the exact same checks locally:
+### 5. Testing
 
 ```bash
-# This runs the same checks as the GitHub workflows
-make lint
+# Run all tests
+make test
+
+# Run unit tests only (faster, 4 parallel workers)
 make test-unit
+
+# Run a specific test file
+uv run pytest tests/path/to/test_file.py -v
+
+# Run a specific test function
+uv run pytest tests/path/to/test_file.py::test_function -v
 ```
 
-For exact CI compatibility (pins OpenAI version like CI):
-```bash
-make install-dev-ci     # Installs exact CI dependencies
+**Testing guidelines:**
+- Add tests in `tests/litellm/` for all new features or bug fixes
+- Keep monkeypatch stubs in sync with real function signatures
+- Test all branches of name→ID resolution (resolves+allowed, resolves+not-allowed, doesn't resolve)
+
+### 6. Submit a Pull Request
+
+- Reference any related issue: `Closes #123`
+- Ensure `make test-unit` passes
+- Ensure `make lint` passes
+- The PR template in `.github/pull_request_template.md` provides the required structure
+
+## Project Layout
+
 ```
-
-## Available Make Commands
-
-Run `make help` to see all available commands:
-
-```bash
-make help                       # Show all available commands
-make install-dev               # Install development dependencies
-make install-proxy-dev         # Install proxy development dependencies
-make install-test-deps         # Install the full local test environment
-make format                    # Apply Black code formatting
-make format-check              # Check Black formatting (matches CI)
-make lint                      # Run all linting checks
-make test-unit                 # Run unit tests
-make test-integration          # Run integration tests
-make test-unit-helm            # Run Helm unit tests
+litellm/
+├── litellm/          # Core library
+│   ├── main.py       # Core completion() entry point
+│   ├── llms/         # Provider implementations
+│   ├── router.py     # Load balancing & fallback logic
+│   ├── types/        # Pydantic models & type hints
+│   ├── integrations/ # Third-party observability, caching, logging
+│   └── proxy/        # FastAPI proxy server
+├── tests/
+│   ├── test_litellm/ # Unit tests
+│   └── llm_translation/ # Integration tests
+└── scripts/          # Developer helper scripts
 ```
-
-## Code Quality Standards
-
-LiteLLM follows the [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
-
-Our automated quality checks include:
-- **Black** for consistent code formatting
-- **Ruff** for linting and code quality
-- **MyPy** for static type checking
-- **Circular import detection**
-- **Import safety validation**
-
-All checks must pass before your PR can be merged.
-
-## Common Issues and Solutions
-
-### 1. Linting Failures
-
-If `make lint` fails:
-
-1. **Formatting issues**: Run `make format` to auto-fix
-2. **Ruff issues**: Check the output and fix manually
-3. **MyPy issues**: Add proper type hints
-4. **Circular imports**: Refactor import dependencies
-5. **Import safety**: Fix any unprotected imports
-
-### 2. Test Failures
-
-If `make test-unit` fails:
-
-1. Check if you broke existing functionality
-2. Add tests for your new code
-3. Ensure tests use mocks, not real API calls
-4. Check test file naming conventions
-
-### 3. Common Development Tips
-
-- **Use type hints**: MyPy requires proper type annotations
-- **Write descriptive commit messages**: Help reviewers understand your changes
-- **Keep PRs focused**: One feature/fix per PR
-- **Test edge cases**: Don't just test the happy path
-- **Update documentation**: If you change APIs, update docs
-
-## Building and Running Locally
-
-### LiteLLM Proxy Server
-
-To run the proxy server locally:
-
-```bash
-# Install proxy dependencies
-make install-proxy-dev
-
-# Start the proxy server
-uv run litellm --config your_config.yaml
-```
-
-### Docker Development
-
-If you want to build the Docker image yourself:
-
-```bash
-# Build using the non-root Dockerfile
-docker build -f docker/Dockerfile.non_root -t litellm_dev .
-
-# Run with your config
-docker run \
-    -v $(pwd)/proxy_config.yaml:/app/config.yaml \
-    -e LITELLM_MASTER_KEY="sk-1234" \
-    -p 4000:4000 \
-    litellm_dev \
-    --config /app/config.yaml --detailed_debug
-```
-
-## UI Development
-
-### 1. Setup Your Local UI Development Environment
-
-```bash
-# Clone the repo (if you haven't already)
-git clone https://github.com/YOUR_USERNAME/litellm.git
-cd litellm
-
-# Navigate to the UI dashboard directory
-cd ui/litellm-dashboard
-
-# Install dependencies
-npm install
-
-# Start the development server
-npm run dev
-```
-
-### 2. Adding UI Tests
-
-If you are adding a **new component** or **new logic**, you must add corresponding tests.
-
-### 3. Running UI Unit Tests
-
-```bash
-npm run test
-```
-
-### 4. Building the UI
-
-Ensure the UI builds successfully before submitting your PR:
-
-```bash
-npm run build
-```
-
-## Submitting Your PR
-
-1. **Push your branch**: `git push origin your-feature-branch`
-2. **Create a PR**: Go to GitHub and create a pull request
-3. **Fill out the PR template**: Provide clear description of changes
-4. **Wait for review**: Maintainers will review and provide feedback
-5. **Address feedback**: Make requested changes and push updates
-6. **Merge**: Once approved, your PR will be merged!
 
 ## Getting Help
 
-If you need help:
-
-- 💬 [Join our Discord](https://discord.gg/wuPM9dRgDw)
-- 💬 [Join our Slack](https://www.litellm.ai/support)
-- 📧 Email us: ishaan@berri.ai / krrish@berri.ai
-- 🐛 [Create an issue](https://github.com/BerriAI/litellm/issues/new)
-
-## What to Contribute
-
-Looking for ideas? Check out:
-
-- 🐛 [Good first issues](https://github.com/BerriAI/litellm/labels/good%20first%20issue)
-- 🚀 [Feature requests](https://github.com/BerriAI/litellm/labels/enhancement)
-- 📚 Documentation improvements
-- 🧪 Test coverage improvements
-- 🔌 New LLM provider integrations
-
-Thank you for contributing to LiteLLM! 🚀 
+- Open an issue for bugs or feature requests using the templates in `.github/ISSUE_TEMPLATE/`
+- Join the [Discord](https://discord.gg/wuPM9dRgDw) for questions
+- Check existing issues and PRs before opening a duplicate
