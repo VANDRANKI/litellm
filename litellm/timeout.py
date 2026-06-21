@@ -16,11 +16,15 @@ from concurrent import futures
 from functools import wraps
 from inspect import iscoroutinefunction
 from threading import Thread
+from typing import Any, Callable, Optional, Type
 
 from litellm.exceptions import Timeout
 
 
-def timeout(timeout_duration: float = 0.0, exception_to_raise=Timeout):
+def timeout(
+    timeout_duration: float = 0.0,
+    exception_to_raise: Type[BaseException] = Timeout,
+) -> Callable:
     """
     Wraps a function to raise the specified exception if execution time
     is greater than the specified timeout.
@@ -29,16 +33,16 @@ def timeout(timeout_duration: float = 0.0, exception_to_raise=Timeout):
     some overhead due to the backend use of threads and asyncio.
 
         :param float timeout_duration: Timeout duration in seconds. If none callable won't time out.
-        :param OpenAIError exception_to_raise: Exception to raise when the callable times out.
-            Defaults to TimeoutError.
+        :param exception_to_raise: Exception to raise when the callable times out.
+            Defaults to ``litellm.exceptions.Timeout``.
         :return: The decorated function.
         :rtype: callable
     """
 
-    def decorator(func):
+    def decorator(func: Callable) -> Callable:
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            async def async_func():
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            async def async_func() -> Any:
                 return func(*args, **kwargs)
 
             thread = _LoopWrapper()
@@ -63,15 +67,18 @@ def timeout(timeout_duration: float = 0.0, exception_to_raise=Timeout):
             return result
 
         @wraps(func)
-        async def async_wrapper(*args, **kwargs):
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             local_timeout_duration = timeout_duration
             if "force_timeout" in kwargs:
                 local_timeout_duration = kwargs["force_timeout"]
             elif "request_timeout" in kwargs and kwargs["request_timeout"] is not None:
                 local_timeout_duration = kwargs["request_timeout"]
             try:
+                # BUG FIX: was incorrectly passing `timeout_duration` (the outer
+                # closure variable) instead of `local_timeout_duration`, which meant
+                # per-call force_timeout / request_timeout overrides were ignored.
                 value = await asyncio.wait_for(
-                    func(*args, **kwargs), timeout=timeout_duration
+                    func(*args, **kwargs), timeout=local_timeout_duration
                 )
                 return value
             except asyncio.TimeoutError:
@@ -90,16 +97,18 @@ def timeout(timeout_duration: float = 0.0, exception_to_raise=Timeout):
 
 
 class _LoopWrapper(Thread):
-    """Daemon thread that owns a dedicated asyncio event loop.
+    """Daemon thread that owns a dedicated ``asyncio`` event loop.
 
-    Used by the sync branch of :func:`timeout` to run a coroutine on a
-    background event loop so the calling thread can wait on it with a
-    timeout via :func:`asyncio.run_coroutine_threadsafe`.
+    Used by the sync ``timeout`` wrapper to run a coroutine from a
+    non-async context with a wall-clock timeout via
+    ``asyncio.run_coroutine_threadsafe``.  The loop is started in
+    :meth:`run` and stopped (with task cancellation) in
+    :meth:`stop_loop`.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(daemon=True)
-        self.loop = asyncio.new_event_loop()
+        self.loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
 
     def run(self) -> None:
         try:
@@ -112,7 +121,8 @@ class _LoopWrapper(Thread):
             self.loop.close()
             asyncio.set_event_loop(None)
 
-    def stop_loop(self):
+    def stop_loop(self) -> None:
+        """Cancel all pending tasks and stop the event loop."""
         for task in asyncio.all_tasks(self.loop):
             task.cancel()
         self.loop.call_soon_threadsafe(self.loop.stop)
