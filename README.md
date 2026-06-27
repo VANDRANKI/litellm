@@ -1,3 +1,4 @@
+
 <h1 align="center">
         🚅 LiteLLM
     </h1>
@@ -260,6 +261,104 @@ curl -X POST 'http://0.0.0.0:4000/v1/chat/completions' \
 
 </details>
 
+<details>
+<summary><b>Provider Configuration</b> - Environment variables and config patterns for common providers</summary>
+
+Each provider requires its own API key, typically set as an environment variable. Below are the most commonly used patterns.
+
+### OpenAI
+
+```python
+import os
+import litellm
+
+os.environ["OPENAI_API_KEY"] = "sk-..."
+
+response = litellm.completion(
+    model="openai/gpt-4o",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+### Anthropic
+
+```python
+import os
+import litellm
+
+os.environ["ANTHROPIC_API_KEY"] = "sk-ant-..."
+
+response = litellm.completion(
+    model="anthropic/claude-sonnet-4-20250514",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+### Azure OpenAI
+
+```python
+import os
+import litellm
+
+os.environ["AZURE_API_KEY"] = "..."
+os.environ["AZURE_API_BASE"] = "https://<your-resource>.openai.azure.com/"
+os.environ["AZURE_API_VERSION"] = "2024-02-01"
+
+response = litellm.completion(
+    model="azure/<your-deployment-name>",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+### AWS Bedrock
+
+```python
+import os
+import litellm
+
+os.environ["AWS_ACCESS_KEY_ID"] = "..."
+os.environ["AWS_SECRET_ACCESS_KEY"] = "..."
+os.environ["AWS_REGION_NAME"] = "us-east-1"
+
+response = litellm.completion(
+    model="bedrock/anthropic.claude-3-sonnet-20240229-v1:0",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+### Google Gemini
+
+```python
+import os
+import litellm
+
+os.environ["GEMINI_API_KEY"] = "..."
+
+response = litellm.completion(
+    model="gemini/gemini-2.0-flash",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+### Ollama (Local Models)
+
+```python
+import litellm
+
+# Make sure Ollama is running locally: `ollama serve`
+response = litellm.completion(
+    model="ollama/llama3.2",
+    messages=[{"role": "user", "content": "Hello!"}],
+    api_base="http://localhost:11434"
+)
+```
+
+> **Tip:** You can also set provider credentials in a `config.yaml` for the proxy server instead of using environment variables. See [Proxy Config Docs](https://docs.litellm.ai/docs/proxy/configs).
+
+[**Docs: All Provider Configuration**](https://docs.litellm.ai/docs/providers)
+
+</details>
+
 ### Supported Providers ([Website Supported Models](https://models.litellm.ai/) | [Docs](https://docs.litellm.ai/docs/providers))
 
 | Provider                                                                            | `/chat/completions` | `/messages` | `/responses` | `/embeddings` | `/image/generations` | `/audio/transcriptions` | `/audio/speech` | `/moderations` | `/batches` | `/rerank` |
@@ -484,7 +583,7 @@ make format-check   # Check formatting only
 
 For detailed contributing guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-> **📖 Contributing to documentation?** The LiteLLM docs have moved to a separate repository: [BerriAI/litellm-docs](https://github.com/BerriAI/litellm-docs). Please open doc PRs there. Docs are served at [docs.litellm.ai](https://docs.litellm.ai).
+> **Contributing to documentation?** The LiteLLM docs have moved to a separate repository: [BerriAI/litellm-docs](https://github.com/BerriAI/litellm-docs). Please open doc PRs there. Docs are served at [docs.litellm.ai](https://docs.litellm.ai).
 
 ## Code Quality / Linting
 
