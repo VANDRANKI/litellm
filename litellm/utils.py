@@ -6736,7 +6736,7 @@ def _should_retry(status_code: int):
 
 def _get_retry_after_from_exception_header(
     response_headers: Optional[httpx.Headers] = None,
-):
+) -> int:
     """
     Reimplementation of openai's calculate retry after, since that one can't be imported.
     https://github.com/openai/openai-python/blob/af67cfab4210d8e497c05390ce14f39105c77519/src/openai/_base_client.py#L631
@@ -6765,7 +6765,10 @@ def _get_retry_after_from_exception_header(
         return retry_after
 
     except Exception:
-        retry_after = -1
+        # Any unexpected error while parsing the header (e.g. malformed
+        # date) falls back to -1, the same "no hint from server" signal
+        # used above, instead of implicitly returning None.
+        return -1
 
 
 def _calculate_retry_after(
