@@ -5221,7 +5221,16 @@ def _is_valid_team_configs(team_id=None, team_config=None, request_data=None):
     return
 
 
-def _to_ns(dt):
+def _to_ns(dt: datetime) -> int:
+    """
+    Convert a datetime object to nanoseconds since the epoch.
+
+    Args:
+        dt: The datetime object to convert.
+
+    Returns:
+        The number of nanoseconds since the epoch.
+    """
     return int(dt.timestamp() * 1e9)
 
 
