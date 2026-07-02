@@ -21,7 +21,7 @@ def get_num_retries_from_retry_policy(
     retry_policy: Optional[Union[RetryPolicy, dict]] = None,
     model_group: Optional[str] = None,
     model_group_retry_policy: Optional[Dict[str, RetryPolicy]] = None,
-):
+) -> Optional[int]:
     """
     BadRequestErrorRetries: Optional[int] = None
     AuthenticationErrorRetries: Optional[int] = None
