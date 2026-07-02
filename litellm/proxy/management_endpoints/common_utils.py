@@ -23,6 +23,11 @@ if TYPE_CHECKING:
 
 
 def _user_has_admin_view(user_api_key_dict: UserAPIKeyAuth) -> bool:
+    """
+    Check if the user has proxy-admin level read access.
+
+    Returns True if the user's role is PROXY_ADMIN or PROXY_ADMIN_VIEW_ONLY.
+    """
     return (
         user_api_key_dict.user_role == LitellmUserRoles.PROXY_ADMIN
         or user_api_key_dict.user_role == LitellmUserRoles.PROXY_ADMIN_VIEW_ONLY

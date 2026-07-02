@@ -11,10 +11,32 @@ from unittest.mock import patch
 
 import pytest
 
+from litellm.proxy._types import LitellmUserRoles, UserAPIKeyAuth
 from litellm.proxy.management_endpoints.common_utils import (
     _has_non_empty_value,
     _update_metadata_fields,
+    _user_has_admin_view,
 )
+
+
+class TestUserHasAdminView:
+    """Tests for the _user_has_admin_view helper."""
+
+    def test_proxy_admin_has_admin_view(self):
+        user = UserAPIKeyAuth(user_role=LitellmUserRoles.PROXY_ADMIN)
+        assert _user_has_admin_view(user) is True
+
+    def test_proxy_admin_view_only_has_admin_view(self):
+        user = UserAPIKeyAuth(user_role=LitellmUserRoles.PROXY_ADMIN_VIEW_ONLY)
+        assert _user_has_admin_view(user) is True
+
+    def test_internal_user_does_not_have_admin_view(self):
+        user = UserAPIKeyAuth(user_role=LitellmUserRoles.INTERNAL_USER)
+        assert _user_has_admin_view(user) is False
+
+    def test_no_role_does_not_have_admin_view(self):
+        user = UserAPIKeyAuth(user_role=None)
+        assert _user_has_admin_view(user) is False
 
 
 class TestHasNonEmptyValue:
