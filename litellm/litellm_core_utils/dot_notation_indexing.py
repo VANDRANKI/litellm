@@ -23,6 +23,8 @@ Used by JWT Auth to get the user role from the token, and by
 additional_drop_params to remove nested fields from optional parameters.
 """
 
+import copy
+import re
 from typing import Any, Dict, List, Optional, TypeVar, Union
 
 T = TypeVar("T")
@@ -103,8 +105,6 @@ def _parse_path_segments(path: str) -> list:
         >>> _parse_path_segments("tools[*].arr[0].field")
         ["tools", "[*]", "arr", "[0]", "field"]
     """
-    import re
-
     # Match field names OR bracket expressions
     # Pattern: field_name (anything except . or [) | [anything_in_brackets]
     pattern = r"[^\.\[]+|\[[^\]]*\]"
@@ -225,8 +225,6 @@ def delete_nested_value(
         >>> delete_nested_value(data, "tools[*].input_examples")
         {"tools": [{"name": "t1"}]}
     """
-    import copy
-
     result = copy.deepcopy(data)
 
     try:
