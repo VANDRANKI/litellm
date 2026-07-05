@@ -45,7 +45,11 @@ def generate_iam_token(api_key=None, **params) -> str:
                 or get_secret_str("WATSONX_ZENAPIKEY")
             )
         if api_key is None:
-            raise ValueError("API key is required")
+            raise ValueError(
+                "WatsonX API key is required. Set it via the `api_key` param or "
+                "one of the WX_API_KEY, WATSONX_API_KEY, WATSONX_APIKEY, "
+                "WATSONX_ZENAPIKEY environment variables."
+            )
         headers["Accept"] = "application/json"
         data = {
             "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
