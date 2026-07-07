@@ -1,7 +1,7 @@
 """
 Re rank api
 
-LiteLLM supports the re rank API format, no paramter transformation occurs
+LiteLLM supports the rerank API format, no parameter transformation occurs
 """
 
 from typing import Any, Dict, List, Optional, Union
@@ -59,7 +59,9 @@ class TogetherAIRerank(BaseLLM):
         )
 
         if response.status_code != 200:
-            raise Exception(response.text)
+            raise Exception(
+                f"TogetherAI rerank API error: status_code={response.status_code}, response={response.text}"
+            )
 
         _json_response = response.json()
 
@@ -85,7 +87,9 @@ class TogetherAIRerank(BaseLLM):
         )
 
         if response.status_code != 200:
-            raise Exception(response.text)
+            raise Exception(
+                f"TogetherAI rerank API error: status_code={response.status_code}, response={response.text}"
+            )
 
         _json_response = response.json()
 
