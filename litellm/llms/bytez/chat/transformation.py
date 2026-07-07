@@ -459,7 +459,7 @@ def _adapt_string_only_content_to_lists(messages: List[Dict]):
 
 
 # TODO get this from the api instead of doing it here, will require backend work
-def get_tokens_from_messages(messages: List[dict]):
+def get_tokens_from_messages(messages: List[dict]) -> int:
     total = 0
 
     for message in messages:
