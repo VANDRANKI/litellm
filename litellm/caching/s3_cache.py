@@ -158,6 +158,15 @@ class S3Cache(BaseCache):
                 )
                 return None
 
+            # Any other S3 error code (e.g. AccessDenied, throttling, expired
+            # credentials) was previously swallowed here with no logging at
+            # all, making it indistinguishable from a normal cache miss.
+            verbose_logger.error(
+                f"S3 Caching: get_cache() - Got S3 ClientError for key '{key}': "
+                f"{e.response['Error'].get('Code')}: {e}"
+            )
+            return None
+
         except Exception as e:
             verbose_logger.error(
                 f"S3 Caching: get_cache() - Got exception from S3: {e}"
