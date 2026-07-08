@@ -1,9 +1,11 @@
 """
 AgentOps integration for LiteLLM - Provides OpenTelemetry tracing for LLM calls
 """
+
 import os
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
+from litellm._logging import verbose_logger
 from litellm.integrations.opentelemetry import OpenTelemetry, OpenTelemetryConfig
 from litellm.llms.custom_httpx.http_handler import _get_httpx_client
 
@@ -59,8 +61,13 @@ class AgentOps(OpenTelemetry):
                 response = self._fetch_auth_token(config.api_key, config.auth_endpoint)
                 jwt_token = response.get("token")
                 project_id = response.get("project_id")
-            except Exception:
-                pass
+            except Exception as e:
+                # Don't let a failed prefetch crash init - AgentOps tracing
+                # will still work without JWT auth, just log why it happened
+                # so the user isn't left guessing when project.id is missing.
+                verbose_logger.warning(
+                    f"AgentOps: Failed to fetch auth token from {config.auth_endpoint}: {e}"
+                )
 
         headers = f"Authorization=Bearer {jwt_token}" if jwt_token else None
 
