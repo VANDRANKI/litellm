@@ -130,7 +130,7 @@ def get_llm_provider(  # noqa: PLR0915
         if litellm_params:
             assert (
                 custom_llm_provider is None and api_base is None and api_key is None
-            ), "Either pass in litellm_params or the custom_llm_provider/api_base/api_key. Otherwise, these values will be overriden."
+            ), "Either pass in litellm_params or the custom_llm_provider/api_base/api_key. Otherwise, these values will be overridden."
             custom_llm_provider = litellm_params.custom_llm_provider
             api_base = litellm_params.api_base
             api_key = litellm_params.api_key
