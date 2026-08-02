@@ -59,9 +59,9 @@ async def router_cooldown_event_callback(
         pass
 
     # get the prometheus logger from in memory loggers
-    prometheusLogger: Optional[
-        PrometheusLogger
-    ] = _get_prometheus_logger_from_callbacks()
+    prometheusLogger: Optional[PrometheusLogger] = (
+        _get_prometheus_logger_from_callbacks()
+    )
 
     if prometheusLogger is not None:
         prometheusLogger.set_deployment_complete_outage(
@@ -84,7 +84,7 @@ async def router_cooldown_event_callback(
 
 def _get_prometheus_logger_from_callbacks() -> Optional[PrometheusLogger]:
     """
-    Checks if prometheus is a initalized callback, if yes returns it
+    Checks if prometheus is an initialized callback, if yes returns it
     """
     from litellm.integrations.prometheus import PrometheusLogger
 
