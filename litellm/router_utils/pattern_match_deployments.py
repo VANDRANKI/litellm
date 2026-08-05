@@ -58,16 +58,16 @@ class PatternMatchRouter:
     This class will store a mapping for regex pattern: List[Deployments]
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.patterns: Dict[str, List] = {}
 
-    def add_pattern(self, pattern: str, llm_deployment: Dict):
+    def add_pattern(self, pattern: str, llm_deployment: Dict) -> None:
         """
         Add a regex pattern and the corresponding llm deployments to the patterns
 
         Args:
             pattern: str
-            llm_deployment: str or List[str]
+            llm_deployment: Dict - the deployment config to associate with the pattern
         """
         # Convert the pattern to a regex
         regex = self._pattern_to_regex(pattern)
@@ -105,11 +105,13 @@ class PatternMatchRouter:
         new_deployments = []
         for deployment in deployments:
             new_deployment = copy.deepcopy(deployment)
-            new_deployment["litellm_params"][
-                "model"
-            ] = PatternMatchRouter.set_deployment_model_name(
-                matched_pattern=matched_pattern,
-                litellm_deployment_litellm_model=deployment["litellm_params"]["model"],
+            new_deployment["litellm_params"]["model"] = (
+                PatternMatchRouter.set_deployment_model_name(
+                    matched_pattern=matched_pattern,
+                    litellm_deployment_litellm_model=deployment["litellm_params"][
+                        "model"
+                    ],
+                )
             )
             new_deployments.append(new_deployment)
 
@@ -221,7 +223,7 @@ class PatternMatchRouter:
             custom_llm_provider: Optional[str]
 
         Returns:
-            bool: True if pattern exists, False otherwise
+            Optional[List[Dict]]: the matching llm deployments if a pattern exists, None otherwise
         """
         if custom_llm_provider is None:
             try:
