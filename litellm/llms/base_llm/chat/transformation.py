@@ -178,7 +178,7 @@ class BaseConfig(ABC):
         """
         Translate `developer` role to `system` role for non-OpenAI providers.
 
-        Overriden by OpenAI/Azure
+        Overridden by OpenAI/Azure
         """
         return map_developer_role_to_system_role(messages=messages)
 
@@ -188,7 +188,7 @@ class BaseConfig(ABC):
         """
         Returns True if the model/provider should retry the LLM API on UnprocessableEntityError
 
-        Overriden by azure ai - where different models support different parameters
+        Overridden by azure ai - where different models support different parameters
         """
         return False
 
@@ -298,7 +298,7 @@ class BaseConfig(ABC):
         fake_stream: Optional[bool] = None,
     ) -> Tuple[dict, Optional[bytes]]:
         """
-        Some providers like Bedrock require signing the request. The sign request funtion needs access to `request_data` and `complete_url`
+        Some providers like Bedrock require signing the request. The sign request function needs access to `request_data` and `complete_url`
         Args:
             headers: dict
             optional_params: dict
