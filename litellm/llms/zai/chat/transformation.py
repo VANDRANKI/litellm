@@ -1,5 +1,6 @@
 from typing import List, Optional, Tuple
 
+import litellm
 from litellm.secret_managers.main import get_secret_str
 from litellm.types.llms.openai import AllMessageValues, ChatCompletionToolParam
 
@@ -44,8 +45,6 @@ class ZAIChatConfig(OpenAIGPTConfig):
             "tools",
             "tool_choice",
         ]
-
-        import litellm
 
         try:
             if litellm.supports_reasoning(
