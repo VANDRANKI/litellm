@@ -22,7 +22,7 @@ class LiteLLM_VectorStoreConfig(TypedDict, total=False):
 
 
 class LiteLLM_ManagedVectorStore(TypedDict, total=False):
-    """LiteLLM managed vector store object - this is is the object stored in the database"""
+    """LiteLLM managed vector store object - this is the object stored in the database"""
 
     vector_store_id: str
     custom_llm_provider: str
@@ -215,7 +215,7 @@ class BaseVectorStoreAuthCredentials(TypedDict, total=False):
 
 
 class LiteLLM_ManagedVectorStoreIndex(BaseModel):
-    """LiteLLM managed vector store index object - this is is the object stored in the database"""
+    """LiteLLM managed vector store index object - this is the object stored in the database"""
 
     id: str
     index_name: str
