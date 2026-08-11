@@ -756,6 +756,13 @@ class MockRouterTestingParams:
 
     @classmethod
     def from_kwargs(cls, kwargs: dict) -> "MockRouterTestingParams":
+        """
+        Build a MockRouterTestingParams from a completion/embedding kwargs dict.
+
+        Pops the `mock_testing_fallbacks`, `mock_testing_context_fallbacks`, and
+        `mock_testing_content_policy_fallbacks` keys out of `kwargs` (mutating it
+        in place) and coerces any string values (e.g. "true"/"false") to bool.
+        """
         from litellm.secret_managers.main import str_to_bool
 
         def extract_bool_param(name: str) -> Optional[bool]:
