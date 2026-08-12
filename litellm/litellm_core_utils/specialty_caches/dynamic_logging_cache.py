@@ -1,12 +1,13 @@
 """
 This is a cache for LangfuseLoggers.
 
-Langfuse Python SDK initializes a thread for each client. 
+Langfuse Python SDK initializes a thread for each client.
 
-This ensures we do 
+This ensures we do
 1. Proper cleanup of Langfuse initialized clients.
 2. Re-use created langfuse clients.
 """
+
 import hashlib
 import json
 from typing import Any, Optional
@@ -30,7 +31,7 @@ class LangfuseInMemoryCache(InMemoryCache):
         """
         Override _remove_key in InMemoryCache to ensure we do proper cleanup of Langfuse initialized clients.
 
-        LangfuseLoggers consume threads when initalized, this shuts them down when they are expired
+        LangfuseLoggers consume threads when initialized, this shuts them down when they are expired
 
         Relevant Issue: https://github.com/BerriAI/litellm/issues/11169
         """

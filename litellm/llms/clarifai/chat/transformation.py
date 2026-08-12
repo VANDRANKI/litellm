@@ -104,7 +104,7 @@ class ClarifaiConfig(OpenAIGPTConfig):
             original_response=raw_response.text,
             additional_args={"complete_input_dict": request_data},
         )
-        ## Reponse
+        ## Response
         try:
             completion_response = raw_response.json()
         except Exception as e:
