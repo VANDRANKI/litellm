@@ -63,11 +63,19 @@ class DynamicLoggingCache:
         self.cache = LangfuseInMemoryCache(default_ttl=_DEFAULT_TTL_FOR_HTTPX_CLIENTS)
 
     def get_cache_key(self, args: dict) -> str:
+        """
+        Derive a stable cache key by hashing the sorted JSON representation of `args`.
+        """
         args_str = json.dumps(args, sort_keys=True)
         cache_key = hashlib.sha256(args_str.encode("utf-8")).hexdigest()
         return cache_key
 
     def get_cache(self, credentials: dict, service_name: str) -> Optional[Any]:
+        """
+        Look up a previously cached logging client for the given `credentials` and `service_name`.
+
+        Returns `None` if no client has been cached yet, or if it has expired.
+        """
         key_name = self.get_cache_key(
             args={**credentials, "service_name": service_name}
         )
@@ -75,6 +83,10 @@ class DynamicLoggingCache:
         return response
 
     def set_cache(self, credentials: dict, service_name: str, logging_obj: Any) -> None:
+        """
+        Cache `logging_obj` (e.g. a LangFuseLogger instance) under a key derived from
+        `credentials` and `service_name`, so subsequent requests can reuse it.
+        """
         key_name = self.get_cache_key(
             args={**credentials, "service_name": service_name}
         )
