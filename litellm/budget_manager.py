@@ -212,8 +212,6 @@ class BudgetManager:
 
     def save_data(self):
         if self.client_type == "local":
-            import json
-
             # save the user dict
             with open("user_cost.json", "w") as json_file:
                 json.dump(
