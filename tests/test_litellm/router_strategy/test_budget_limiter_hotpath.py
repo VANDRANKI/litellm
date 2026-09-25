@@ -237,6 +237,105 @@ async def test_get_llm_provider_for_deployment_matches_legacy_behavior(disable_b
     assert current_provider == legacy_provider
 
 
+@pytest.mark.asyncio
+async def test_async_filter_deployments_blocks_provider_with_zero_max_budget(disable_budget_sync):
+    dual_cache = DualCache()
+    provider_budget = RouterBudgetLimiting(
+        dual_cache=dual_cache,
+        provider_budget_config={
+            "openai": BudgetConfig(budget_duration="1d", max_budget=0.0),
+        },
+    )
+    await dual_cache.async_set_cache("provider_spend:openai:1d", 50.0)
+
+    healthy_deployments = [
+        {
+            "model_name": "gpt-4o-mini",
+            "litellm_params": {"model": "openai/gpt-4o-mini"},
+            "model_info": {"id": "deployment-1"},
+        }
+    ]
+
+    with pytest.raises(ValueError, match="crossed budget"):
+        await provider_budget.async_filter_deployments(
+            model="gpt-4o-mini",
+            healthy_deployments=healthy_deployments,
+            messages=[],
+            request_kwargs={},
+            parent_otel_span=None,
+        )
+
+
+@pytest.mark.asyncio
+async def test_async_filter_deployments_blocks_deployment_with_zero_max_budget(disable_budget_sync, monkeypatch):
+    monkeypatch.setattr(asyncio, "create_task", lambda coro: None)
+
+    dual_cache = DualCache()
+    deployment_budget = RouterBudgetLimiting(
+        dual_cache=dual_cache,
+        provider_budget_config={},
+        model_list=[
+            {
+                "model_name": "gpt-4o-mini",
+                "litellm_params": {
+                    "model": "openai/gpt-4o-mini",
+                    "max_budget": 0.0,
+                    "budget_duration": "1d",
+                },
+                "model_info": {"id": "deployment-1"},
+            }
+        ],
+    )
+    await dual_cache.async_set_cache("deployment_spend:deployment-1:1d", 50.0)
+
+    healthy_deployments = [
+        {
+            "model_name": "gpt-4o-mini",
+            "litellm_params": {"model": "openai/gpt-4o-mini"},
+            "model_info": {"id": "deployment-1"},
+        }
+    ]
+
+    with pytest.raises(ValueError, match="crossed budget"):
+        await deployment_budget.async_filter_deployments(
+            model="gpt-4o-mini",
+            healthy_deployments=healthy_deployments,
+            messages=[],
+            request_kwargs={},
+            parent_otel_span=None,
+        )
+
+
+@pytest.mark.asyncio
+async def test_async_filter_deployments_blocks_tag_with_zero_max_budget(disable_budget_sync):
+    dual_cache = DualCache()
+    tag_budget = RouterBudgetLimiting(
+        dual_cache=dual_cache,
+        provider_budget_config={},
+    )
+    tag_budget.tag_budget_config = {
+        "product:chat-bot": BudgetConfig(budget_duration="1d", max_budget=0.0),
+    }
+    await dual_cache.async_set_cache("tag_spend:product:chat-bot:1d", 50.0)
+
+    healthy_deployments = [
+        {
+            "model_name": "gpt-4o-mini",
+            "litellm_params": {"model": "openai/gpt-4o-mini"},
+            "model_info": {"id": "deployment-1"},
+        }
+    ]
+
+    with pytest.raises(ValueError, match="crossed budget"):
+        await tag_budget.async_filter_deployments(
+            model="gpt-4o-mini",
+            healthy_deployments=healthy_deployments,
+            messages=[],
+            request_kwargs={"metadata": {"tags": ["product:chat-bot"]}},
+            parent_otel_span=None,
+        )
+
+
 def test_register_deployment_budget_for_runtime_added_deployment(disable_budget_sync, monkeypatch):
     import asyncio
 
